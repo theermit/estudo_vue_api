@@ -1,0 +1,13 @@
+{
+    "require": {
+        "slim/slim": "3.*",
+        "firebase/php-jwt": "^6.4.0",
+        "vlucas/phpdotenv": "^5.5",
+        "fpdf/fpdf": "^1.86"
+    },
+    "autoload": {
+        "psr-4": {
+            "lib\\": "lib/"
+        }
+    }
+}
