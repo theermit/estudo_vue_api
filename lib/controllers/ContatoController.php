@@ -77,7 +77,7 @@ class ContatoController
         try 
         {
             if(!$stmt = $this->dbConn->prepare(
-                "update contato set nome = :nome, telefone = :telefone where id = :id)"
+                "update contato set nome = :nome, telefone = :telefone where id = :id"
             ))
                 throw new \Exception("Falha na query!");
 
@@ -183,23 +183,53 @@ class ContatoController
         try 
         {
             if(!$stmt = $this->dbConn->prepare(
-                "select * from contato where id_usuario = :id_usuario"
+                #"select * from contato where id_usuario = :id_usuario"
+                "select 
+                    usuario.nome as nome_usuario, 
+                    contato.id, 
+                    contato.id_usuario, 
+                    contato.nome, 
+                    contato.telefone 
+                    from 
+                        contato RIGHT JOIN usuario 
+                        on usuario.id = contato.id_usuario 
+                    WHERE 
+                        usuario.id = :id_usuario"
             ))
                 throw new \Exception("Falha na query!");
 
             if(!$stmt->execute([
-                "id" => $request->getAttribute("id_usuario")
+                "id_usuario" => $request->getAttribute("id_usuario")
             ]))
                 throw new \Exception("Falha na query!");
             
-            $contato = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $resultados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $resultado = [];
+            $resultado['nome_usuario'] = null;
+            $resultado['contatos'] = [];
+            if(count($resultados) > 0)
+            {
+                for($cont = 0; $cont < count($resultados); $cont++)
+                {
+                    if($cont == 0)
+                    {
+                        $resultado['nome_usuario'] = $resultados[$cont]['nome_usuario'];
+                    }
+                    if($resultados[$cont]['id'] != null)
+                    {
+                        $temp = $resultados[$cont];
+                        unset($temp['nome_usuario']);
+                        array_push($resultado['contatos'], $temp);
+                    }
+                }
+            }
         }
         catch(\Exception $e)
         {
             return $response->withStatus(500);
         }
 
-        $response->getBody()->write(json_encode($contato, JSON_NUMERIC_CHECK));
+        $response->getBody()->write(json_encode($resultado, JSON_NUMERIC_CHECK));
         $response = $response->withHeader('content-type','application/json');
         return $response->withStatus(200);
     }
